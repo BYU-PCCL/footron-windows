@@ -11,11 +11,29 @@ class LastInputChecker:
     def __init__(self):
         self._queue_loop_thread = Thread(target=queue_loop, args=(queue))
         self._queue = Queue()
+        self.holding_map = {
+        "ABS_X": False,
+        "ABS_Y": False,
+        "ABS_RX": False,
+        "ABS_RY": False
+    }
+
+    
 
     def _start_event_thread_loop(self):
         events = get_gamepad()
         for event in events:
+            self.holding_map.update(event.code, abs(event.state) > 12000) 
+            holding == False
+            time = event.timestamp
+            if (event.code == "ABS_X"
+            or event.code == "ABS_Y"
+            or event.code == "ABS_RX"
+            or event.code == "ABS_RY"):
+                if abs(event.state) > 12000:
+                    holding = True
             self.queue.put(event)
+
 
     async def queue_loop(self):
         self._queue_loop_thread.start()
