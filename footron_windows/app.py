@@ -2,6 +2,8 @@ import re
 from pathlib import Path
 from typing import Optional
 
+import win32con
+import win32gui
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
@@ -22,6 +24,11 @@ class CurrentExperience(BaseModel):
 class CurrentResponse(BaseModel):
     id: Optional[str]
     processes: Optional[int]
+
+
+@app.on_event("startup")
+async def create_startup_window():
+    win32gui.ShowWindow(win32gui.GetForegroundWindow(), win32con.SW_HIDE)
 
 
 @app.put("/current")
