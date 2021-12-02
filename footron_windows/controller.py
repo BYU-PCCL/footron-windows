@@ -27,6 +27,11 @@ class WindowsController:
         async with self._process_lock:
             await self._set_current_inner(id, path)
 
+    def processes(self):
+        if not self._process:
+            return None
+        return self._process.processes_in_job()
+
     async def _stop_current_inner(self):
         if not self._id:
             return
