@@ -19,11 +19,20 @@ class CurrentExperience(BaseModel):
     path: Optional[str]
 
 
+class CurrentResponse(BaseModel):
+    id: Optional[str]
+    processes: Optional[int]
+
+
 @app.put("/current")
-async def root(body: CurrentExperience):
+async def set_current(body: CurrentExperience):
     if not body.id:
         await controller.stop_current()
     else:
+        if not body.path:
+            return HTTPException(
+                status_code=400, detail="'path' is required when 'id' is specified"
+            )
         if re.search(r"[^a-zA-Z0-9-]", body.id) is not None:
             raise HTTPException(status_code=400, detail=f"Invalid id '{body.id}'")
         experience_path = BASE_EXPERIENCE_PATH / body.id
@@ -34,3 +43,8 @@ async def root(body: CurrentExperience):
             )
         await controller.set_current(body.id, binary_path)
     return {"status": "ok"}
+
+
+@app.get("/current", response_model=CurrentResponse)
+async def get_current():
+    return CurrentResponse(id=controller.id, processes=controller.processes())

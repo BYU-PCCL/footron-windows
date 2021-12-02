@@ -85,6 +85,15 @@ class JobPopen(Popen):
             win32api.CloseHandle(self._win32_job)
             self._win32_job = None
 
+    def processes_in_job(self):
+        if not self._win32_job:
+            return None
+
+        extended_info = win32job.QueryInformationJobObject(
+            self._win32_job, win32job.JobObjectBasicAccountingInformation
+        )
+        return extended_info["ActiveProcesses"]
+
     # This ensures that no remaining subprocesses are found when the process
     # exits from a `with JobPopen(...)` block.
     def __exit__(self, exc_type, value, traceback):
