@@ -29,6 +29,8 @@ async def root(body: CurrentExperience):
         experience_path = BASE_EXPERIENCE_PATH / body.id
         binary_path = (experience_path / (re.sub(r"\.\./", "", body.path))).resolve()
         if not binary_path.is_relative_to(BASE_EXPERIENCE_PATH):
-            raise HTTPException(status_code=400, detail=f"Invalid or unauthorized path '{body.path}'")
+            raise HTTPException(
+                status_code=400, detail=f"Invalid or unauthorized path '{body.path}'"
+            )
         await controller.set_current(body.id, binary_path)
     return {"status": "ok"}
