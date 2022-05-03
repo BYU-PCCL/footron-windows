@@ -9,11 +9,16 @@ import os
 from api import LastControllerInputApi
 
 LAST_CONTROLLER_INPUT_SET_DELAY = 2
-LAST_CONTROLLER_INPUT_ENDPOINT = "last_controller_input"
 
+# CONTROLLER_URL = (
+#     os.environ["FT_CONTROLLER_URL"]
+#     if "FT_CONTROLLER_URL" in os.environ
+#     else "http://localhost:8000"
+# )
+_CONTROLLER_URL_ENV = "FT_CONTROLLER_URL"
 CONTROLLER_URL = (
-    os.environ["FT_CONTROLLER_URL"]
-    if "FT_CONTROLLER_URL" in os.environ
+    os.environ[_CONTROLLER_URL_ENV]
+    if _CONTROLLER_URL_ENV in os.environ
     else "http://localhost:8000"
 )
 
@@ -21,24 +26,16 @@ CONTROLLER_URL = (
 class LastControllerInput:
     def __init__(self):
         self._api = LastControllerInputApi(CONTROLLER_URL)
-        self.last_interaction = [
-            time(),
-            False,
-        ]  # event.timestamp is in the format of seconds, so this might be the best strat
+        self.last_interaction = [int(time() * 1000), False]
         self.holding = {}
-        # self.holding_map = {
-        #     "ABS_X": False,
-        #     "ABS_Y": False,
-        #     "ABS_RX": False,
-        #     "ABS_RY": False,
-        # }
 
+        # pulls inputs from the controller
         def get_input_loop():
             while True:
                 events = get_gamepad()
                 for event in events:
                     if event.ev_type == "Key":
-                        # binary inputs (buttons, bumpers)
+                        # binary inputs (buttons, bumpers, etc.)
                         self.holding[event.code] = True if event.state == 1 else False
                     if event.code[0:3] == "ABS":
                         if event.code[4:7] == "HAT":
@@ -52,25 +49,18 @@ class LastControllerInput:
                                 True if event.state > 10 else False
                             )
                         else:  # ABS_X or ABS_Y
-                            # left and right stick
+                            # left/right stick
                             if abs(event.state) > 12000:
                                 self.holding[event.code] = True
                             else:
                                 self.holding[event.code] = False
-                    # self.holding_map.update({event.code: abs(event.state) > 12000})
-                    # holding = False
-                    # if (
-                    #     self.holding_map.get("ABS_X")
-                    #     or self.holding_map.get("ABS_Y")
-                    #     or self.holding_map.get("ABS_RX")
-                    #     or self.holding_map.get("ABS_RY")
-                    # ):
-                    #     holding = True
+
                     self.last_interaction = [
-                        event.timestamp,
+                        int(event.timestamp * 1000),
                         True in self.holding.values(),
                     ]
 
+        # periodically sets the last input through the api
         def update_last_input_loop():
             while True:
                 sleep(LAST_CONTROLLER_INPUT_SET_DELAY)
@@ -86,28 +76,5 @@ class LastControllerInput:
         while True:
             pass
 
-            # send message or get api to do it
-
-            # do we need the whole event? or just the time? Do we even need the time?
-            # I guess we just compare the time to make sure there's a new interaction. Not bigger/less than, just !=
-
-        # I mean, we just need to send a message every 5 seconds or so...
-        # event thread loop will set the last event
-        # the other loop will just post every 5 seconds.
-
 
 test = LastControllerInput()
-
-
-# for every event:
-#   if the amount is more than thresh
-#       set it as holding (store event?)
-#
-# Loop
-# While True
-#   While True
-#       try to get the thing, if not break
-#       last_event = the last event in the queue
-#
-#
-#
