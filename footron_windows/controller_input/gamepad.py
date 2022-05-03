@@ -9,12 +9,6 @@ import os
 from api import LastControllerInputApi
 
 LAST_CONTROLLER_INPUT_SET_DELAY = 2
-
-# CONTROLLER_URL = (
-#     os.environ["FT_CONTROLLER_URL"]
-#     if "FT_CONTROLLER_URL" in os.environ
-#     else "http://localhost:8000"
-# )
 _CONTROLLER_URL_ENV = "FT_CONTROLLER_URL"
 CONTROLLER_URL = (
     os.environ[_CONTROLLER_URL_ENV]
@@ -57,8 +51,17 @@ class LastControllerInput:
 
                     self.last_interaction = [
                         int(event.timestamp * 1000),
-                        True in self.holding.values(),
+                        is_held(),
                     ]
+
+        def is_held(self):
+            # what happens with multiple controllers?
+            # for sticks: add 1 when something being held, subtract one when no longer being held
+            # for buttons: add 1 to general total?
+
+            # for everything?? just have a general total and return true when not 0, false when 0
+
+            return True in self.holding.values()
 
         # periodically sets the last input through the api
         def update_last_input_loop():
