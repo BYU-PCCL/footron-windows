@@ -7,7 +7,6 @@ class LastControllerInputApi:
     def __init__(self, url):
         self.url = url
         self.last_input_time = None
-        self._url_with_endpoint()
 
     def _url_with_endpoint(self, endpoint) -> str:
         return f"{self.url}{endpoint}"
