@@ -17,10 +17,10 @@ class LastControllerInputApi:
         if last_input[0] != self.last_input_time or last_input[1] == True:
             print(str(last_input[0]) + ", holding = " + str(last_input[1]))
             self.last_input_time = last_input[0]
-            response = requests.patch(
-                self._url_with_endpoint(_ENDPOINT_CURRENT_EXPERIENCE),
-                json={"last_interaction": last_input[0]},
-            )
+            # response = requests.patch(
+            #     self._url_with_endpoint(_ENDPOINT_CURRENT_EXPERIENCE),
+            #     json={"last_interaction": last_input[0]},
+            # )
         else:
             print("no change")
 
