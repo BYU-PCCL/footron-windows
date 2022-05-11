@@ -1,5 +1,5 @@
 from typing import Tuple
-from inputs import get_gamepad
+from inputs import UnpluggedError, DeviceManager
 
 from threading import Thread
 import datetime as dt
@@ -38,31 +38,37 @@ class LastControllerInput:
     # pulls inputs from the controller
     def get_input_loop(self):
         while True:
-            events = get_gamepad()
-            for event in events:
-                if event.ev_type == "Key":
-                    # binary inputs (buttons, bumpers, etc.)
-                    self.holding[event.code] = True if event.state == 1 else False
-                if event.code[0:3] == "ABS":
-                    if event.code[4:7] == "HAT":
-                        # d-pad
-                        self.holding[event.code] = (
-                            True if abs(event.state) == 1 else False
-                        )
-                    elif "Z" in str(event.code[4:6]):
-                        # triggers
-                        self.holding[event.code] = True if event.state > 10 else False
-                    else:  # ABS_X or ABS_Y
-                        # left/right stick
-                        if abs(event.state) > 12000:
-                            self.holding[event.code] = True
-                        else:
-                            self.holding[event.code] = False
+            try:
+                for gamepad in DeviceManager().gamepads:
+                    events = gamepad.read()
+                    for event in events:
+                        if event.ev_type == "Key":
+                            # binary inputs (buttons, bumpers, etc.)
+                            self.holding[event.code] = True if event.state == 1 else False
+                        if event.code[0:3] == "ABS":
+                            if event.code[4:7] == "HAT":
+                                # d-pad
+                                self.holding[event.code] = (
+                                    True if abs(event.state) == 1 else False
+                                )
+                            elif "Z" in str(event.code[4:6]):
+                                # triggers
+                                self.holding[event.code] = True if event.state > 10 else False
+                            else:  # ABS_X or ABS_Y
+                                # left/right stick
+                                if abs(event.state) > 12000:
+                                    self.holding[event.code] = True
+                                else:
+                                    self.holding[event.code] = False
 
-                self.last_interaction = [
-                    int(event.timestamp * 1000),
-                    self.is_held(),
-                ]
+                        self.last_interaction = [
+                            int(event.timestamp * 1000),
+                            self.is_held(),
+                        ]
+            except UnpluggedError as e:
+                print(str(e))
+
+
 
     def is_held(self):
         # what happens with multiple controllers?
