@@ -21,7 +21,7 @@ class LastControllerInput:
     def __init__(self):
         self._api = LastControllerInputApi(CONTROLLER_URL)
         self.last_interaction = [int(time() * 1000), False]
-        self.holding = {}
+        self.holding = [{} for _ in range(4)] # 4 controllers
 
         # threads for getting the inputs and posting the latest input
         get_input_loop_thread = Thread(target=self.get_input_loop, daemon=True)
@@ -32,6 +32,7 @@ class LastControllerInput:
         # set_last_input_loop_thread.setDaemon(True)
         get_input_loop_thread.start()
         set_last_input_loop_thread.start()
+        self.gamepads = None
         while True:
             pass
 
@@ -39,7 +40,8 @@ class LastControllerInput:
     def get_input_loop(self):
         while True:
             try:
-                for gamepad in DeviceManager().gamepads:
+                self.update_gamepads()
+                for gamepad in self.gamepads:
                     events = gamepad.read()
                     for event in events:
                         if event.ev_type == "Key":
@@ -84,6 +86,9 @@ class LastControllerInput:
         while True:
             sleep(LAST_CONTROLLER_INPUT_SET_DELAY)
             self._api.set_last_input(self.last_interaction)
+
+    def update_gamepads(self):
+        self.gamepads = DeviceManager().gamepads
 
 
 test = LastControllerInput()
