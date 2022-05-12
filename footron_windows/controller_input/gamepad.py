@@ -31,7 +31,7 @@ class LastControllerInput:
         while True:
             pass
 
-    # pulls inputs from the controller
+    # pulls inputs from the controllers
     def get_input_loop(self):
         while True:
             events = get_events()
