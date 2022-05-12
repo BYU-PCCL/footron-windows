@@ -1,6 +1,5 @@
 from typing import Tuple
-from inputs import UnpluggedError, DeviceManager
-
+from xinput import get_gamepad
 from threading import Thread
 import datetime as dt
 from time import sleep, time
@@ -21,7 +20,7 @@ class LastControllerInput:
     def __init__(self):
         self._api = LastControllerInputApi(CONTROLLER_URL)
         self.last_interaction = [int(time() * 1000), False]
-        self.holding = [{} for _ in range(4)] # 4 controllers
+        self.holding = [{} for _ in range(4)]  # 4 controllers
 
         # threads for getting the inputs and posting the latest input
         get_input_loop_thread = Thread(target=self.get_input_loop, daemon=True)
@@ -39,38 +38,37 @@ class LastControllerInput:
     # pulls inputs from the controller
     def get_input_loop(self):
         while True:
-            try:
-                self.update_gamepads()
-                for gamepad in self.gamepads:
-                    events = gamepad.read()
-                    for event in events:
-                        if event.ev_type == "Key":
-                            # binary inputs (buttons, bumpers, etc.)
-                            self.holding[event.code] = True if event.state == 1 else False
-                        if event.code[0:3] == "ABS":
-                            if event.code[4:7] == "HAT":
-                                # d-pad
-                                self.holding[event.code] = (
-                                    True if abs(event.state) == 1 else False
-                                )
-                            elif "Z" in str(event.code[4:6]):
-                                # triggers
-                                self.holding[event.code] = True if event.state > 10 else False
-                            else:  # ABS_X or ABS_Y
-                                # left/right stick
-                                if abs(event.state) > 12000:
-                                    self.holding[event.code] = True
-                                else:
-                                    self.holding[event.code] = False
+            events = get_events()
+            for event in events:
+                last_input_time = datetime.now()
+                # print(event)
+                if event.type == 2:
+                    holding[event.user_index] = {}
+                elif hasattr(event, "button"):
+                    if event.button == "GUIDE":
+                        print("guide")
+                    else:
+                        holding[event.user_index][event.button] = (
+                            True if event.type == 3 else False
+                        )
+                elif hasattr(event, "trigger"):
+                    holding[event.user_index]["trigger" + str(event.trigger)] = (
+                        True if event.value >= 0.001 else False
+                    )
+                elif hasattr(event, "stick"):
+                    holding[event.user_index]["stick" + str(event.stick)] = (
+                        True if event.value >= 0.01 else False
+                    )
+                # elif hasattr(event, "stick"):
+                #     holding[event.user_index]["stick" + str(event.stick)] = (
+                #         True if (abs(event.x) >= 0.025 or abs(event.y) >= 0.025) else False
+                #     )
 
-                        self.last_interaction = [
-                            int(event.timestamp * 1000),
-                            self.is_held(),
-                        ]
-            except UnpluggedError as e:
-                print(str(e))
-
-
+                # print(event)
+                print(is_held())
+                # if hasattr(event, "stick"):
+                #     print(event)
+                #     print(is_held())
 
     def is_held(self):
         # what happens with multiple controllers?
