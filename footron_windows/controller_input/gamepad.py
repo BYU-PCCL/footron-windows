@@ -2,7 +2,6 @@ from XInput import get_events, EVENT_DISCONNECTED
 from threading import Thread
 from time import sleep, time
 import os
-import requests
 
 from api import LastControllerInputApi
 
