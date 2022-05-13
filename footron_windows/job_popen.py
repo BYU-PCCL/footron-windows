@@ -56,7 +56,11 @@ class JobPopen(Popen):
             _winapi = subprocess._subprocess  # Python 2
             _winapi_key = "_subprocess"
         try:
-            setattr(subprocess, _winapi_key, JobPopen._winapijobhandler(_winapi, self._win32_job))
+            setattr(
+                subprocess,
+                _winapi_key,
+                JobPopen._winapijobhandler(_winapi, self._win32_job),
+            )
             super(JobPopen, self).__init__(*args, **kwargs)
         finally:
             setattr(subprocess, _winapi_key, _winapi)
@@ -64,9 +68,15 @@ class JobPopen(Popen):
     def _create_job_object(self):
         """Create a new anonymous job object"""
         hjob = win32job.CreateJobObject(None, "")
-        extended_info = win32job.QueryInformationJobObject(hjob, win32job.JobObjectExtendedLimitInformation)
-        extended_info['BasicLimitInformation']['LimitFlags'] = win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
-        win32job.SetInformationJobObject(hjob, win32job.JobObjectExtendedLimitInformation, extended_info)
+        extended_info = win32job.QueryInformationJobObject(
+            hjob, win32job.JobObjectExtendedLimitInformation
+        )
+        extended_info["BasicLimitInformation"][
+            "LimitFlags"
+        ] = win32job.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+        win32job.SetInformationJobObject(
+            hjob, win32job.JobObjectExtendedLimitInformation, extended_info
+        )
         return hjob
 
     def _close_job_object(self, hjob):
@@ -74,6 +84,15 @@ class JobPopen(Popen):
         if self._win32_job:
             win32api.CloseHandle(self._win32_job)
             self._win32_job = None
+
+    def processes_in_job(self):
+        if not self._win32_job:
+            return None
+
+        extended_info = win32job.QueryInformationJobObject(
+            self._win32_job, win32job.JobObjectBasicAccountingInformation
+        )
+        return extended_info["ActiveProcesses"]
 
     # This ensures that no remaining subprocesses are found when the process
     # exits from a `with JobPopen(...)` block.
