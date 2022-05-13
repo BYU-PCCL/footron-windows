@@ -7,6 +7,8 @@ import win32gui
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from footron_windows.controller_input.gamepad import LastControllerInput
+
 from .controller import WindowsController
 
 app = FastAPI()
@@ -14,6 +16,7 @@ app = FastAPI()
 BASE_EXPERIENCE_PATH = Path("D:\\footron-experiences\\")
 
 controller = WindowsController()
+last_controller_input = None
 
 
 class CurrentExperience(BaseModel):
@@ -27,8 +30,10 @@ class CurrentResponse(BaseModel):
 
 
 @app.on_event("startup")
-async def create_startup_window():
+async def startup_event():
+    global last_controller_input
     win32gui.ShowWindow(win32gui.GetForegroundWindow(), win32con.SW_HIDE)
+    last_controller_input = LastControllerInput()
 
 
 @app.put("/current")
