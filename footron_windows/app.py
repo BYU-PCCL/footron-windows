@@ -13,7 +13,7 @@ from .controller import WindowsController
 
 app = FastAPI()
 
-BASE_EXPERIENCE_PATH = Path("D:\\footron-experiences\\")
+BASE_EXPERIENCE_PATH = Path("C:\\footron-experiences\\")
 
 controller = WindowsController()
 last_controller_input = None
