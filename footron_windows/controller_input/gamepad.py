@@ -3,7 +3,7 @@ from threading import Thread
 from time import sleep, time
 import os
 
-from api import LastControllerInputApi
+from .api import LastControllerInputApi
 
 LAST_CONTROLLER_INPUT_SET_DELAY = 2
 _CONTROLLER_URL_ENV = "FT_CONTROLLER_URL"
