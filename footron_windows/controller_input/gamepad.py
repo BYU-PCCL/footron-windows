@@ -1,9 +1,8 @@
-from typing import Tuple
 from XInput import get_events, EVENT_DISCONNECTED
 from threading import Thread
-import datetime as dt
 from time import sleep, time
 import os
+import requests
 
 from api import LastControllerInputApi
 
@@ -18,28 +17,37 @@ CONTROLLER_URL = (
 
 class LastControllerInput:
     def __init__(self):
-        self._api = LastControllerInputApi(CONTROLLER_URL)
-        self.last_interaction = time() * 1000
+        self.api = LastControllerInputApi(CONTROLLER_URL)
+        self.last_interaction = None
+        self.last_update = None
+        self.update_last_interaction()
 
         # threads for getting the inputs and posting the latest input
-        get_input_loop_thread = Thread(target=self.get_input_loop, daemon=True)
+        get_input_loop_thread = Thread(target=self._get_input_loop, daemon=True)
         set_last_input_loop_thread = Thread(
-            target=self.update_last_input_loop, daemon=True
+            target=self._update_last_input_loop, daemon=True
         )
         get_input_loop_thread.start()
         set_last_input_loop_thread.start()
-        while True:
-            pass
 
     # pulls inputs from the controllers
-    def get_input_loop(self):
+    def _get_input_loop(self):
         while True:
             events = get_events()
             for event in events:
                 if event.type != EVENT_DISCONNECTED:
-                    self.last_interaction = time() * 1000
+                    self.update_last_interaction()
 
-    def update_last_input_loop(self):
+    def _update_last_input_loop(self):
         while True:
+            if self.last_interaction != self.last_update and self.is_windows_exp():
+                self.api.set_last_input(self.last_interaction)
+                self.last_update = self.last_interaction
             sleep(LAST_CONTROLLER_INPUT_SET_DELAY)
-            self._api.set_last_input(self.last_interaction)
+
+    def is_windows_exp(self):
+        current_exp = self.api.get_current()
+        return current_exp["type"] == "capture"
+
+    def update_last_interaction(self):
+        self.last_interaction = int(time() * 1000)
